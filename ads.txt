@@ -1,4 +1,0 @@
-# ads.txt — autoriza quem pode vender seu inventário de anúncios.
-# Substitua pub-0000000000000000 pelo SEU ID de editor do AdSense (sem "ca-").
-# Sem este arquivo correto, o Google não veicula anúncios no site.
-google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
