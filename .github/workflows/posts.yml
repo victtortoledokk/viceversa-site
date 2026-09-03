@@ -1,0 +1,46 @@
+name: Publicar posts (Issues + X -> site)
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled, deleted]
+  schedule:
+    - cron: "0 */3 * * *"    # de 3 em 3 horas, para pegar posts novos do X
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Fonte confiável: as Issues. Monta a base do feed.
+      - name: Ler as Issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python automacao/posts.py
+
+      # Complemento melhor-esforço: os posts do X, por endpoint público.
+      # continue-on-error garante que uma falha aqui não derruba a publicação.
+      - name: Tentar ler os posts do X
+        continue-on-error: true
+        run: python automacao/ler-x.py
+
+      - name: Regerar o site
+        run: python montar.py
+
+      - name: Publicar
+        run: |
+          git config user.name "viceversa-bot"
+          git config user.email "bot@viceversa"
+          git add feed.json docs/
+          git diff --cached --quiet || git commit -m "posts: atualiza o painel de notícias"
+          git push
